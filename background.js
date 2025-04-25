@@ -4,7 +4,7 @@ function gravify() {
     // Injecting scripts
     .executeScript({ file: "/lib/html-to-image.js" })
     .then(() => browser.tabs.executeScript({ file: "/lib/matter.min.js" }))
-    .then(() => browser.tabs.executeScript({ file: "/gravify2.js" }))
+    .then(() => browser.tabs.executeScript({ file: "/gravify.js" }))
     .catch((e) => console.error("Gravifying had an error:", e));
 }
 
