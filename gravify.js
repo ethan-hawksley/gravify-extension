@@ -1,0 +1,336 @@
+"use strict";
+console.log("gravify 2");
+
+const elements = [];
+const ignoreTags = ["DIV", "NOSCRIPT", "SCRIPT", "META", "LINK"];
+
+function findChildlessElements(element) {
+  if (!element || element.nodeType !== Node.ELEMENT_NODE) return;
+
+  // Skip hidden elements
+  const style = window.getComputedStyle(element);
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    style.opacity === "0" ||
+    element.offsetWidth === 0 ||
+    element.offsetHeight === 0
+  ) {
+    return;
+  }
+
+  if (element.children.length === 0) {
+    if (ignoreTags.includes(element.tagName)) {
+      return;
+    }
+    elements.push(element);
+  } else {
+    Array.from(element.children).forEach((child) => {
+      findChildlessElements(child);
+    });
+  }
+}
+
+// Give the page time to fully render before processing
+setTimeout(() => {
+  try {
+    findChildlessElements(document.body);
+    console.log(`Found ${elements.length} elements to process`);
+    processElements();
+  } catch (error) {
+    console.error("Error in initial element search:", error);
+  }
+}, 500);
+
+function processElements() {
+  const promises = [];
+  for (const element of elements) {
+    try {
+      // Add padding
+      element.style.padding = "20px";
+
+      // Make sure images are loaded before capture
+      const images = element.querySelectorAll("img");
+      const imagePromises = Array.from(images).map((img) => {
+        return new Promise((resolve) => {
+          if (img.complete) {
+            resolve();
+          } else {
+            img.onload = resolve;
+            img.onerror = resolve; // Resolve even on error to continue
+          }
+        });
+      });
+
+      // Wait for all images in this element to load, then capture
+      promises.push(
+        Promise.all(imagePromises)
+          .then(() =>
+            htmlToImage.toPng(element, {
+              quality: 0.95,
+              cacheBust: true, // Avoid caching issues
+            }),
+          )
+          .catch((e) => {
+            console.error("Error converting element to image", e);
+            return null;
+          }),
+      );
+    } catch (error) {
+      console.error("Error setting up element for conversion:", error);
+      promises.push(Promise.resolve(null));
+    }
+  }
+
+  let pageElements = [];
+  Promise.all(promises)
+    .then((urls) => {
+      const validUrls = urls.filter((url) => url !== null);
+      console.log(
+        `Successfully converted ${validUrls.length} of ${elements.length} elements`,
+      );
+
+      for (let i = 0; i < elements.length; i++) {
+        if (urls[i]) {
+          // Validate URL data before adding
+          if (urls[i].length > 100) {
+            // Basic check for non-empty image data
+            pageElements.push({
+              url: urls[i],
+              coords: elements[i].getBoundingClientRect(),
+            });
+          } else {
+            console.warn(`Skipping element ${i} - invalid image data`);
+          }
+        }
+      }
+
+      console.log(
+        `Created ${pageElements.length} valid page elements for simulation`,
+      );
+      if (pageElements.length > 0) {
+        startPhysics(pageElements);
+      } else {
+        console.error("No valid elements available for simulation");
+      }
+    })
+    .catch((error) => {
+      console.error("Error processing images:", error);
+    });
+}
+
+// function initialiseSimulation(pageElements) {
+//   if (!pageElements || pageElements.length === 0) {
+//     console.error("No page elements to simulate");
+//     return;
+//   }
+
+//   // // Create a map to avoid duplicate downloads
+//   // const uniqueUrls = new Map();
+
+//   // pageElements.forEach((element, index) => {
+//   //   if (!element || !element.url) return;
+
+//   //   // Check for duplicates
+//   //   if (uniqueUrls.has(element.url)) {
+//   //     console.log(`Skipping duplicate image at index ${index}`);
+//   //     return;
+//   //   }
+
+//   //   uniqueUrls.set(element.url, true);
+
+//   //   // setTimeout(() => {
+//   //   //   try {
+//   //   //     console.log(`Triggering download for element ${index}`);
+
+//   //   //     // Test the image data before downloading
+//   //   //     const img = new Image();
+//   //   //     img.onload = () => {
+//   //   //       if (img.width > 0 && img.height > 0) {
+//   //   //         // const link = document.createElement("a");
+//   //   //         // link.download = `element_${index}.png`;
+//   //   //         // link.href = element.url;
+//   //   //         // document.body.appendChild(link);
+//   //   //         // link.click();
+//   //   //         // document.body.removeChild(link);
+//   //   //       } else {
+//   //   //         console.error(`Element ${index} has zero dimensions`);
+//   //   //       }
+//   //   //     };
+//   //   //     img.onerror = () => {
+//   //   //       console.error(`Failed to load test image for element ${index}`);
+//   //   //     };
+//   //   //     img.src = element.url;
+//   //   //   } catch (error) {
+//   //   //     console.error(`Error downloading element ${index}:`, error);
+//   //   //   }
+//   //   // }, index * 200); // Increased delay to avoid browser throttling
+//   // });
+
+//   // Create the container after downloads to avoid page reflows breaking the captures
+//   setTimeout(
+//     () => {
+//       startPhysics(pageElements);
+//     },
+//     100,
+//   );
+// }
+//
+
+function startPhysics(pageElements) {
+  if (!pageElements || pageElements.length === 0) {
+    console.error("No available elements to simulate");
+    window.alert("No available elements to simulate");
+    return;
+  }
+
+  const container = document.createElement("div");
+  container.id = "container";
+  document.body.replaceChildren(container);
+
+  container.style.position = "fixed";
+  container.style.top = "0";
+  container.style.left = "0";
+  container.style.width = "100%";
+  container.style.height = "100%";
+  container.style.zIndex = "9999";
+
+  try {
+    const Engine = Matter.Engine;
+    const Render = Matter.Render;
+    const World = Matter.World;
+    const Bodies = Matter.Bodies;
+    const Runner = Matter.Runner;
+    const Composite = Matter.Composite;
+    const Mouse = Matter.Mouse;
+    const MouseConstraint = Matter.MouseConstraint;
+
+    const engine = Engine.create();
+    engine.world.gravity.y = 1;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    container.appendChild(canvas);
+
+    const render = Render.create({
+      canvas: canvas,
+      engine: engine,
+      options: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        wireframes: false,
+        background: "#f0f0f0",
+      },
+    });
+
+    const floor = Bodies.rectangle(
+      window.innerWidth / 2,
+      window.innerHeight + 10,
+      window.innerWidth,
+      80,
+      {
+        isStatic: true,
+        render: { fillStyle: "#f0f0f0" },
+      },
+    );
+
+    const ceiling = Bodies.rectangle(
+      window.innerWidth / 2,
+      -40,
+      window.innerWidth,
+      80,
+      {
+        isStatic: true,
+        render: { fillStyle: "#f0f0f0" },
+      },
+    );
+
+    const leftWall = Bodies.rectangle(
+      -40,
+      window.innerHeight / 2,
+      80,
+      window.innerHeight,
+      {
+        isStatic: true,
+        render: { fillStyle: "#f0f0f0" },
+      },
+    );
+
+    const rightWall = Bodies.rectangle(
+      window.innerWidth + 40,
+      window.innerHeight / 2,
+      80,
+      window.innerHeight,
+      {
+        isStatic: true,
+        render: { fillStyle: "#f0f0f0" },
+      },
+    );
+
+    World.add(engine.world, [floor, ceiling, leftWall, rightWall]);
+
+    pageElements.forEach(async (element) => {
+      try {
+        function getSize(url) {
+          return new Promise((resolve, reject) => {
+            let img = new Image();
+            img.onload = () =>
+              resolve({ width: img.width, height: img.height });
+            img.onerror = () => reject();
+            img.src = url;
+          });
+        }
+        const dimensions = await getSize(element.url);
+
+        console.log(dimensions);
+
+        const shape = Bodies.rectangle(
+          window.innerWidth / 2,
+          window.innerHeight / 2,
+          Math.max(dimensions.width / 2, 20),
+          Math.max(dimensions.height / 2, 20),
+          {
+            render: {
+              sprite: {
+                texture: element.url,
+              },
+            },
+          },
+        );
+
+        World.add(engine.world, [shape]);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    const mouse = Mouse.create(render.canvas);
+    const mouseConstraint = MouseConstraint.create(engine, {
+      mouse: mouse,
+      constraint: {
+        stiffness: 0.1,
+        render: {
+          visible: false,
+        },
+      },
+    });
+
+    World.add(engine.world, mouseConstraint);
+
+    render.mouse = mouse;
+
+    const runner = Runner.create();
+    Runner.run(runner, engine);
+
+    function renderScene() {
+      Render.world(render);
+    }
+
+    const renderInterval = setInterval(renderScene, 16);
+
+    console.log("Initialised!");
+  } catch (e) {
+    console.error("Error in startPhysics", e);
+  }
+}
