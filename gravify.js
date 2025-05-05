@@ -40,13 +40,13 @@ setTimeout(() => {
   } catch (error) {
     console.error("Error in initial element search:", error);
   }
-}, 500);
+}, 500); // 0.5s
 
 function processElements() {
   const promises = [];
   for (const element of elements) {
     try {
-      // Add padding
+      // Add padding so images are captured properly
       element.style.padding = "20px";
 
       // Make sure images are loaded before capture
@@ -67,7 +67,7 @@ function processElements() {
         Promise.all(imagePromises)
           .then(() =>
             htmlToImage.toPng(element, {
-              quality: 0.95,
+              quality: 0.90,
               cacheBust: true, // Avoid caching issues
             }),
           )
@@ -119,64 +119,6 @@ function processElements() {
     });
 }
 
-// function initialiseSimulation(pageElements) {
-//   if (!pageElements || pageElements.length === 0) {
-//     console.error("No page elements to simulate");
-//     return;
-//   }
-
-//   // // Create a map to avoid duplicate downloads
-//   // const uniqueUrls = new Map();
-
-//   // pageElements.forEach((element, index) => {
-//   //   if (!element || !element.url) return;
-
-//   //   // Check for duplicates
-//   //   if (uniqueUrls.has(element.url)) {
-//   //     console.log(`Skipping duplicate image at index ${index}`);
-//   //     return;
-//   //   }
-
-//   //   uniqueUrls.set(element.url, true);
-
-//   //   // setTimeout(() => {
-//   //   //   try {
-//   //   //     console.log(`Triggering download for element ${index}`);
-
-//   //   //     // Test the image data before downloading
-//   //   //     const img = new Image();
-//   //   //     img.onload = () => {
-//   //   //       if (img.width > 0 && img.height > 0) {
-//   //   //         // const link = document.createElement("a");
-//   //   //         // link.download = `element_${index}.png`;
-//   //   //         // link.href = element.url;
-//   //   //         // document.body.appendChild(link);
-//   //   //         // link.click();
-//   //   //         // document.body.removeChild(link);
-//   //   //       } else {
-//   //   //         console.error(`Element ${index} has zero dimensions`);
-//   //   //       }
-//   //   //     };
-//   //   //     img.onerror = () => {
-//   //   //       console.error(`Failed to load test image for element ${index}`);
-//   //   //     };
-//   //   //     img.src = element.url;
-//   //   //   } catch (error) {
-//   //   //     console.error(`Error downloading element ${index}:`, error);
-//   //   //   }
-//   //   // }, index * 200); // Increased delay to avoid browser throttling
-//   // });
-
-//   // Create the container after downloads to avoid page reflows breaking the captures
-//   setTimeout(
-//     () => {
-//       startPhysics(pageElements);
-//     },
-//     100,
-//   );
-// }
-//
-
 function startPhysics(pageElements) {
   if (!pageElements || pageElements.length === 0) {
     console.error("No available elements to simulate");
@@ -193,6 +135,7 @@ function startPhysics(pageElements) {
   container.style.left = "0";
   container.style.width = "100%";
   container.style.height = "100%";
+  // Place ahead of other elements
   container.style.zIndex = "9999";
 
   try {
@@ -309,7 +252,7 @@ function startPhysics(pageElements) {
     const mouseConstraint = MouseConstraint.create(engine, {
       mouse: mouse,
       constraint: {
-        stiffness: 0.1,
+        stiffness: 0.3,
         render: {
           visible: false,
         },
@@ -327,7 +270,7 @@ function startPhysics(pageElements) {
       Render.world(render);
     }
 
-    const renderInterval = setInterval(renderScene, 16);
+    setInterval(renderScene, 16);
 
     console.log("Initialised!");
   } catch (e) {
