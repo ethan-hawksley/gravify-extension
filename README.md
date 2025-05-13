@@ -13,6 +13,7 @@ Navigate to `about:config` in the Firefox browser. Accept the warning and search
 
 ## Usage
 (Note: due to CSP headers not all sites are supported by the extension. Some that are supported are https://hackatime.hackclub.com https://www.wikipedia.org https://docs.github.com )
+
 Load the desired the website. Then, select the extension's icon from the extensions button on the toolbar. If the page is supported, all the elements of the page will be transformed into a 2D canvas letting you play with the elements of the page!
 
 ## Configuration
