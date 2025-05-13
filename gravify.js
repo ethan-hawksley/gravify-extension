@@ -36,7 +36,12 @@ let fetchedSettings = {
 };
 
 // Fetch settings from browser storage
-const getting = browser.storage.sync.get("gravity");
+let getting = browser.storage.sync.get({
+  gravity: "1.5",
+  bounciness: "0.7",
+  friction: "0.05",
+  airResistance: "0.02",
+});
 getting.then(onGot, onError);
 
 function onError(error) {
@@ -46,6 +51,7 @@ function onError(error) {
 function onGot(item) {
   // Diagnostic logging
   console.log(item);
+  // Override default settings
   fetchedSettings = item;
 }
 
@@ -58,7 +64,7 @@ setTimeout(() => {
   } catch (error) {
     console.error("Error in initial element search:", error);
   }
-}, 500); // 0.5s
+}, 100); // 0.1s
 
 function processElements() {
   const promises = [];
@@ -168,8 +174,8 @@ function startPhysics(pageElements) {
     const MouseConstraint = Matter.MouseConstraint;
 
     const engine = Engine.create();
-    // implement a config menu
-    engine.world.gravity.y = 3;
+    console.log("settings retrieved are ", fetchedSettings);
+    engine.world.gravity.y = fetchedSettings.gravity;
 
     const canvas = document.createElement("canvas");
     canvas.width = window.innerWidth;
@@ -256,6 +262,9 @@ function startPhysics(pageElements) {
           {
             // Implement different weights
             density: (dimensions.width * dimensions.height) / 20,
+            restitution: Number(fetchedSettings.bounciness),
+            friction: Number(fetchedSettings.friction),
+            frictionAir: Number(fetchedSettings.airResistance),
             render: {
               sprite: {
                 texture: element.url,
