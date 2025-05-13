@@ -31,6 +31,24 @@ function findChildlessElements(element) {
   }
 }
 
+let fetchedSettings = {
+  gravity: 1,
+};
+
+// Fetch settings from browser storage
+const getting = browser.storage.sync.get("gravity");
+getting.then(onGot, onError);
+
+function onError(error) {
+  console.error(`Error: ${error}`);
+}
+
+function onGot(item) {
+  // Diagnostic logging
+  console.log(item);
+  fetchedSettings = item;
+}
+
 // Give the page time to fully render before processing
 setTimeout(() => {
   try {
@@ -67,7 +85,7 @@ function processElements() {
         Promise.all(imagePromises)
           .then(() =>
             htmlToImage.toPng(element, {
-              quality: 0.90,
+              quality: 0.9,
               cacheBust: true, // Avoid caching issues
             }),
           )
@@ -150,7 +168,8 @@ function startPhysics(pageElements) {
     const MouseConstraint = Matter.MouseConstraint;
 
     const engine = Engine.create();
-    engine.world.gravity.y = 1;
+    // implement a config menu
+    engine.world.gravity.y = 3;
 
     const canvas = document.createElement("canvas");
     canvas.width = window.innerWidth;
@@ -235,6 +254,8 @@ function startPhysics(pageElements) {
           Math.max(dimensions.width / 2, 20),
           Math.max(dimensions.height / 2, 20),
           {
+            // Implement different weights
+            density: (dimensions.width * dimensions.height) / 20,
             render: {
               sprite: {
                 texture: element.url,
