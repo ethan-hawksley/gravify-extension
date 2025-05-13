@@ -1,5 +1,5 @@
 "use strict";
-console.log("gravify 2");
+console.log("gravify 2 loaded");
 
 const elements = [];
 const ignoreTags = ["DIV", "NOSCRIPT", "SCRIPT", "META", "LINK"];
@@ -78,6 +78,7 @@ function processElements() {
       );
     } catch (error) {
       console.error("Error setting up element for conversion:", error);
+      // Push an empty promise so that all of them resolve anyways
       promises.push(Promise.resolve(null));
     }
   }
