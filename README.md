@@ -1,4 +1,9 @@
 # Gravify Extension
+
+
+https://github.com/user-attachments/assets/2d8156e7-8d20-47b3-9837-87ed4e200590
+
+
 (Only supports Firefox currently)
 
 The Gravify extension is a browser extension that transforms an ordinary webpage into a 2D physics sandbox of all the elements on the page!
