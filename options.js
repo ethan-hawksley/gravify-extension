@@ -14,7 +14,7 @@ function restoreOptions() {
     document.querySelector("#bounciness").value = result.bounciness || "0.5";
     document.querySelector("#friction").value = result.friction || "0.05";
     document.querySelector("#air-resistance").value =
-      result.airResistance || "0.02";
+      result.airResistance || "0.05";
   }
 
   function onError(error) {
@@ -25,7 +25,7 @@ function restoreOptions() {
     gravity: "3",
     bounciness: "0.5",
     friction: "0.05",
-    airResistance: "0.02",
+    airResistance: "0.05",
   });
   getting.then(setCurrentChoice, onError);
 }
