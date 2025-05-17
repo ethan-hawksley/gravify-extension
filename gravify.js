@@ -1,6 +1,51 @@
 "use strict";
 console.log("gravify 2 loaded");
 
+function checkCompatibility() {
+  try {
+    const metaTags = document.querySelectorAll("meta");
+    for (const metaTag of metaTags) {
+      if (metaTag.httpEquiv === "Content-Security-Policy") {
+        const content = metaTag.content;
+        if (
+          content.includes("script-src") &&
+          !content.includes("'unsafe-inline'")
+        ) {
+          return {
+            compatible: false,
+            reason:
+              "This page has a Content Security Policy blocking inline scripts.",
+          };
+        }
+      }
+    }
+    try {
+      document.body.children;
+      return { compatible: true };
+    } catch (e) {
+      return {
+        compatible: false,
+        reason: "Cannot access page elements due to security restrictions.",
+      };
+    }
+  } catch (e) {
+    return {
+      compatible: false,
+      reason: "Error checking compatibility: " + e.message,
+    };
+  }
+}
+
+const compatibilityResult = checkCompatibility();
+if (!compatibilityResult.compatible) {
+  alert("Gravify can't run on this page: " + compatibilityResult.reason);
+  console.error(
+    "Gravify compatibility check failed:",
+    compatibilityResult.reason,
+  );
+  throw new Error("Gravify compatibility check failed");
+}
+
 const elements = [];
 const ignoreTags = ["DIV", "NOSCRIPT", "SCRIPT", "META", "LINK"];
 
@@ -162,6 +207,7 @@ function startPhysics(pageElements) {
   container.style.height = "100%";
   // Place ahead of other elements
   container.style.zIndex = "9999";
+  // lets add funky mouse controls
 
   try {
     const Engine = Matter.Engine;
@@ -293,6 +339,31 @@ function startPhysics(pageElements) {
     World.add(engine.world, mouseConstraint);
 
     render.mouse = mouse;
+
+    document.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    document.addEventListener("auxclick", (event) => {
+      event.preventDefault();
+      if (event.button === 1) {
+        location.reload();
+      } else {
+        const bodies = Matter.Composite.allBodies(engine.world);
+        for (let i = 0; i < bodies.length; i++) {
+          const body = bodies[i];
+
+          if (!body.isStatic) {
+            const forceMagnitude = 0.5 * body.mass;
+
+            Matter.Body.applyForce(body, body.position, {
+              x: (Math.random() - 0.5) * forceMagnitude,
+              y: (Math.random() - 0.5) * forceMagnitude,
+            });
+          }
+        }
+      }
+    });
 
     const runner = Runner.create();
     Runner.run(runner, engine);
