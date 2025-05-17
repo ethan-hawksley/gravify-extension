@@ -1,0 +1,51 @@
+body {
+    background-color: #ebebeb;
+}
+
+form, .subgroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.subgroup {
+    border: 1px solid #bfbfbf;
+    border-radius: 5px;
+}
+
+input[type="range"] {
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    width: 15rem;
+}
+
+input[type="range"]::-moz-range-track {
+    background: #bfbfbf;
+    height: 0.5rem;
+    border-radius: 5px;
+}
+
+input[type="range"]::-moz-range-thumb {
+    border: none;
+    background-color: #999999;
+    height: 2rem;
+    width: 1rem;
+    border-radius: 5px;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+    border: 1px solid #999999;
+    outline: 3px solid #999999;
+    outline-offset: 0.125rem;
+}
+
+button {
+    width: 15rem;
+}

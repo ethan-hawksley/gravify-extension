@@ -9,14 +9,6 @@ function saveOptions(e) {
 }
 
 function restoreOptions() {
-  function setCurrentChoice(result) {
-    document.querySelector("#gravity").value = result.gravity || "3";
-    document.querySelector("#bounciness").value = result.bounciness || "0.5";
-    document.querySelector("#friction").value = result.friction || "0.05";
-    document.querySelector("#air-resistance").value =
-      result.airResistance || "0.05";
-  }
-
   function onError(error) {
     console.error(`Error: ${error}`);
   }
@@ -27,8 +19,30 @@ function restoreOptions() {
     friction: "0.05",
     airResistance: "0.05",
   });
-  getting.then(setCurrentChoice, onError);
+  getting.then(setOptions, onError);
+}
+
+function setOptions(options) {
+  document.querySelector("#gravity").value = options.gravity || "3";
+  document.querySelector("#bounciness").value = options.bounciness || "0.5";
+  document.querySelector("#friction").value = options.friction || "0.05";
+  document.querySelector("#air-resistance").value =
+    options.airResistance || "0.05";
 }
 
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.querySelector("form").addEventListener("submit", saveOptions);
+
+document.querySelector("#moon-preset").addEventListener("click", () => setOptions({
+  gravity: 1,
+  bounciness: 0.7,
+  friction: 0.05,
+  airResistance: 0.05,
+}));
+
+document.querySelector("#jupiter-preset").addEventListener("click", () => setOptions({
+  gravity: 6,
+  bounciness: 0.4,
+  friction: 0.2,
+  airResistance: 0.2,
+}));
