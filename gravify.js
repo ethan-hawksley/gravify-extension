@@ -260,6 +260,38 @@ function createFallbackImage(element) {
   return canvas.toDataURL("image/png", 1.0);
 }
 
+function createSoundEffect(frequency, type, duration) {
+  try {
+    const audioContext = new AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    gainNode.gain.value = 0.1; // Low volume
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+
+    // Fade out effect
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      audioContext.currentTime + duration,
+    );
+
+    setTimeout(() => {
+      oscillator.stop();
+    }, duration * 1000);
+
+    return { oscillator, gainNode, audioContext };
+  } catch (e) {
+    console.error("Sound effect creation failed:", e);
+    return null;
+  }
+}
+
 function startPhysics(pageElements) {
   if (!pageElements || pageElements.length === 0) {
     console.error("No available elements to simulate");
@@ -432,6 +464,10 @@ function startPhysics(pageElements) {
             });
           }
         }
+
+        // Play explosion sound
+        createSoundEffect(100, "sawtooth", 0.6);
+        setTimeout(() => createSoundEffect(80, "square", 0.5), 200);
       }
     });
 
@@ -449,3 +485,5 @@ function startPhysics(pageElements) {
     console.error("Error in startPhysics", e);
   }
 }
+
+// testing
