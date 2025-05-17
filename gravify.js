@@ -3,6 +3,7 @@ console.log("gravify 2 loaded");
 
 function checkCompatibility() {
   try {
+    // Check for CSP headers that may block the script.
     const metaTags = document.querySelectorAll("meta");
     for (const metaTag of metaTags) {
       if (metaTag.httpEquiv === "Content-Security-Policy") {
@@ -20,12 +21,24 @@ function checkCompatibility() {
       }
     }
     try {
-      document.body.children;
+      const testDiv = document.createElement("div");
+      document.body.appendChild(testDiv);
+      document.body.removeChild(testDiv);
+      window.getComputedStyle(document.body);
+      const testCanvas = document.createElement("canvas");
+      if (!testCanvas.getContext) {
+        return {
+          compatible: false,
+          reason: "Browser doesn't support canvas.",
+        };
+      }
+
       return { compatible: true };
     } catch (e) {
       return {
         compatible: false,
-        reason: "Cannot access page elements due to security restrictions.",
+        reason:
+          "Cannot access or modify page elements due to security restrictions.",
       };
     }
   } catch (e) {
@@ -115,7 +128,7 @@ function processElements() {
   const promises = [];
   for (const element of elements) {
     try {
-      // Add padding so images are captured properly
+      // Add padding to capture images properly
       element.style.padding = "20px";
 
       // Make sure images are loaded before capture
@@ -126,29 +139,68 @@ function processElements() {
             resolve();
           } else {
             img.onload = resolve;
-            img.onerror = resolve; // Resolve even on error to continue
+            img.onerror = resolve; // Resolve even errors to continue.
           }
         });
       });
 
-      // Wait for all images in this element to load, then capture
+      // Wait for all images to load, then capture.
       promises.push(
         Promise.all(imagePromises)
-          .then(() =>
-            htmlToImage.toPng(element, {
-              quality: 0.9,
-              cacheBust: true, // Avoid caching issues
-            }),
-          )
+          .then(() => {
+            try {
+              return htmlToImage.toPng(element, {
+                quality: 0.9,
+                cacheBust: true, // Avoid potential caching issues.
+                timeout: 2000, // Timeout to prevent infinite hanging.
+                onclone: (clonedDoc) => {
+                  const processSafeStyles = (elem) => {
+                    try {
+                      const style = window.getComputedStyle(elem);
+                      for (const prop of style) {
+                        const value = style.getPropertyValue(prop);
+                        if (
+                          value === "null" ||
+                          value === undefined ||
+                          value === "undefined"
+                        ) {
+                          elem.style.setProperty(prop, "");
+                        }
+                      }
+
+                      // Process children recursively
+                      Array.from(elem.children).forEach(processSafeStyles);
+                    } catch (e) {
+                      // Silently fail for individual elements
+                    }
+                  };
+
+                  const clonedElem = clonedDoc.querySelector(
+                    `[data-html2canvas-node-id="${element.getAttribute("data-html2canvas-node-id")}"]`,
+                  );
+                  if (clonedElem) {
+                    processSafeStyles(clonedElem);
+                  }
+
+                  return clonedDoc;
+                },
+              });
+            } catch (htmlToImageError) {
+              console.error("Internal html-to-image error:", htmlToImageError);
+
+              // Fallback rectangle for errors.
+              return createFallbackImage(element);
+            }
+          })
           .catch((e) => {
             console.error("Error converting element to image", e);
-            return null;
+
+            return createFallbackImage(element);
           }),
       );
     } catch (error) {
       console.error("Error setting up element for conversion:", error);
-      // Push an empty promise so that all of them resolve anyways
-      promises.push(Promise.resolve(null));
+      promises.push(Promise.resolve(createFallbackImage(element)));
     }
   }
 
@@ -182,11 +234,30 @@ function processElements() {
         startPhysics(pageElements);
       } else {
         console.error("No valid elements available for simulation");
+        alert("No valid elements available for simulation.");
       }
     })
     .catch((error) => {
       console.error("Error processing images:", error);
+      alert("Error processing page elements.");
     });
+}
+
+function createFallbackImage(element) {
+  const { width, height } = element.getBoundingClientRect();
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(width, 50);
+  canvas.height = Math.max(height, 50);
+
+  const ctx = canvas.getContext("2d");
+
+  // Random pastel color
+  const hue = Math.floor(Math.random() * 360);
+  ctx.fillStyle = `hsl(${hue}, 70% 80%)`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  return canvas.toDataURL("image/png", 1.0);
 }
 
 function startPhysics(pageElements) {
@@ -207,7 +278,6 @@ function startPhysics(pageElements) {
   container.style.height = "100%";
   // Place ahead of other elements
   container.style.zIndex = "9999";
-  // lets add funky mouse controls
 
   try {
     const Engine = Matter.Engine;

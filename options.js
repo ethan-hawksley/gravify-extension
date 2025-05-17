@@ -33,10 +33,24 @@ function setOptions(options) {
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.querySelector("form").addEventListener("submit", saveOptions);
 
+document.querySelector("#zero-g-preset").addEventListener("click", () => setOptions({
+  gravity: 0,
+  bounciness: 0.9,
+  friction: 0.01,
+  airResistance: 0.01,
+}));
+
 document.querySelector("#moon-preset").addEventListener("click", () => setOptions({
   gravity: 1,
   bounciness: 0.7,
   friction: 0.05,
+  airResistance: 0.01,
+}));
+
+document.querySelector("#mars-preset").addEventListener("click", () => setOptions({
+  gravity: 4,
+  bounciness: 0.6,
+  friction: 0.1,
   airResistance: 0.05,
 }));
 
@@ -44,5 +58,5 @@ document.querySelector("#jupiter-preset").addEventListener("click", () => setOpt
   gravity: 6,
   bounciness: 0.4,
   friction: 0.2,
-  airResistance: 0.2,
+  airResistance: 0.1,
 }));
