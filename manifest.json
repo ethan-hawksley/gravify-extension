@@ -9,7 +9,7 @@
     "32": "icons/gravify-32.png",
     "64": "icons/gravify-64.png"
   },
-  
+
   "options_ui": {
     "page": "options.html"
   },
