@@ -1,6 +1,8 @@
 "use strict";
 console.log("gravify 2 loaded");
 
+const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+
 function checkCompatibility() {
   try {
     // Check for CSP headers that may block the script.
@@ -94,7 +96,7 @@ let fetchedSettings = {
 };
 
 // Fetch settings from browser storage
-let getting = browser.storage.sync.get({
+let getting = browserAPI.storage.sync.get({
   gravity: "1.5",
   bounciness: "0.7",
   friction: "0.05",
@@ -449,8 +451,6 @@ function startPhysics(pageElements) {
     document.addEventListener("auxclick", (event) => {
       event.preventDefault();
       if (event.button === 1) {
-        location.reload();
-      } else {
         const bodies = Matter.Composite.allBodies(engine.world);
         for (let i = 0; i < bodies.length; i++) {
           const body = bodies[i];
@@ -468,6 +468,102 @@ function startPhysics(pageElements) {
         // Play explosion sound
         createSoundEffect(100, "sawtooth", 0.6);
         setTimeout(() => createSoundEffect(80, "square", 0.5), 200);
+      } else {
+        if (!document.querySelector("#settings-dialog")) {
+          const dialog = document.createElement("dialog");
+          dialog.id = "settings-dialog";
+          dialog.style = `
+            position: relative;
+            padding: 2rem;
+            z-index: 99999;
+            font-size: 1.5rem;
+            min-width: 45rem;
+            border-radius: 5px;
+            border: 1px solid gray;
+          `;
+          const closeDialogButton = document.createElement("button");
+          closeDialogButton.textContent = "×"; // Multiplication sign
+          closeDialogButton.style = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 50%
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          `;
+          closeDialogButton.addEventListener("click", () => {
+            document.querySelector("#settings-dialog").remove();
+          });
+          const buttonGrid = document.createElement("div");
+          buttonGrid.style = `
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1rem;
+            width: 100%;
+          `;
+
+          const explosionButton = document.createElement("button");
+          explosionButton.textContent = "Create Explosion";
+          explosionButton.style = "height:5rem;width:20rem;";
+          explosionButton.addEventListener("click", () => {
+            const bodies = Matter.Composite.allBodies(engine.world);
+            for (let i = 0; i < bodies.length; i++) {
+              const body = bodies[i];
+
+              if (!body.isStatic) {
+                const forceMagnitude = 0.5 * body.mass;
+
+                Matter.Body.applyForce(body, body.position, {
+                  x: (Math.random() - 0.5) * forceMagnitude,
+                  y: (Math.random() - 0.5) * forceMagnitude,
+                });
+              }
+            }
+
+            // Play explosion sound
+            createSoundEffect(100, "sawtooth", 0.6);
+            setTimeout(() => createSoundEffect(80, "square", 0.5), 200);
+          });
+          const wireframeButton = document.createElement("button");
+          wireframeButton.textContent = "Toggle Wireframes";
+          wireframeButton.style = "height:5rem;width:20rem;";
+          wireframeButton.addEventListener("click", () => {
+            render.options.wireframes = !render.options.wireframes;
+          });
+          const changeBackgroundButton = document.createElement("button");
+          changeBackgroundButton.textContent = "Change Background";
+          changeBackgroundButton.style = "height:5rem;width:20rem;";
+          changeBackgroundButton.addEventListener("click", () => {
+            const randomColor = `hsl(${Math.random() * 360}, 60%, 80%)`;
+            render.options.background = randomColor;
+          });
+          const resetButton = document.createElement("button");
+          resetButton.textContent = "Reset Page";
+          resetButton.style = "height:5rem;width:20rem;";
+          resetButton.addEventListener("click", () => {
+            location.reload();
+            document.querySelector("#settings-dialog").remove();
+          });
+
+          buttonGrid.append(
+            explosionButton,
+            wireframeButton,
+            changeBackgroundButton,
+            resetButton,
+          );
+
+          dialog.append(closeDialogButton, buttonGrid);
+          document.body.append(dialog);
+          dialog.show();
+        } else {
+          document.querySelector("#settings-dialog").remove();
+        }
       }
     });
 
@@ -485,5 +581,3 @@ function startPhysics(pageElements) {
     console.error("Error in startPhysics", e);
   }
 }
-
-// testing

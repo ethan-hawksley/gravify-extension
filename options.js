@@ -1,6 +1,8 @@
+const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+
 function saveOptions(e) {
   e.preventDefault();
-  browser.storage.sync.set({
+  browserAPI.storage.sync.set({
     gravity: document.querySelector("#gravity").value,
     bounciness: document.querySelector("#bounciness").value,
     friction: document.querySelector("#friction").value,
@@ -13,7 +15,7 @@ function restoreOptions() {
     console.error(`Error: ${error}`);
   }
 
-  let getting = browser.storage.sync.get({
+  let getting = browserAPI.storage.sync.get({
     gravity: "3",
     bounciness: "0.5",
     friction: "0.05",
@@ -34,7 +36,7 @@ document.addEventListener("DOMContentLoaded", restoreOptions);
 document.querySelector("form").addEventListener("submit", saveOptions);
 
 document.querySelector("#zero-g-preset").addEventListener("click", () => setOptions({
-  gravity: 0,
+  gravity: 0.01,
   bounciness: 0.9,
   friction: 0.01,
   airResistance: 0.01,

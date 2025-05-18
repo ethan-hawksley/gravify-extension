@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Gravify",
-  "version": "1.0",
+  "version": "1.1",
 
   "description": "Click the button in the toolbar to apply gravity to the whole page!",
   "homepage_url": "https://github.com/ethan-hawksley/gravify",
@@ -28,7 +28,7 @@
     "default_title": "Gravify"
   },
 
-  "web_accessible_resources": ["lib/html-to-image.js", "lib/matter.js"],
+  "web_accessible_resources": ["lib/html-to-image.js", "lib/matter.min.js"],
 
   "browser_specific_settings": {
     "gecko": {
