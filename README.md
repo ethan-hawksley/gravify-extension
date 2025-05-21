@@ -19,7 +19,9 @@ Navigate to `about:config` in the Firefox browser. Accept the warning and search
 ## Usage
 (Note: due to CSP headers not all sites are supported by the extension. Some that are supported are https://hackatime.hackclub.com https://www.wikipedia.org https://docs.github.com )
 
-Load the desired the website. Then, select the extension's icon from the extensions button on the toolbar. If the page is supported, all the elements of the page will be transformed into a 2D canvas letting you play with the elements of the page!
+Load the desired the website. Then, select the extension's icon from the extensions button on the toolbar. If the page is supported, all the elements of the page will be transformed into a 2D canvas letting you play with the elements of the page using your mouse!
+
+To open the menu, middle click your mouse. The menu contains many different buttons that can be used to adjust the experience with the extension. To spawn an explosion, right click your mouse to send the elements flying!
 
 ## Configuration
 All configuration for the extension is located in the extension's settings menu. To access, navigate to `about:addons`, click the Gravify extension and navigate to the Preferences tab. There, you can adjust the settings that the simulation uses.
